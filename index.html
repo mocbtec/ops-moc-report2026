@@ -202,11 +202,12 @@ const cn=s=>s.replace(/\s*ไม่น้อย(กว่า)?(\s*ร้อย�
 const f2=n=>n==null?'–':n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const qi=it=>ord(it).filter(i=>it.ind[i].k=='q'),ki=it=>ord(it).filter(i=>it.ind[i].k=='k'),hmo=()=>S.v=='m'?S.s:S.v=='q'?S.s*3+2:11;
 const lastRep=(it,i)=>{let lr=-1;MO.forEach((_,m)=>{if(ac1(it,i,m)!=null)lr=m});return lr},repMonth=x=>{let rm=11;x.pl.forEach((v,m)=>{if(v>0)rm=m});return rm};
-function pst(it){const hm=hmo(),rs=[];it.ind.forEach((x,i)=>{if(!(x.a>0))return;if(x.k=='q'){const lr=lastRep(it,i);if(lr<0)return;const A=AC(it,i,0,Math.min(hm,lr));if(A!=null)rs.push(A/x.a)}else{const A=ac1(it,i,repMonth(x));if(A!=null)rs.push(A/x.a)}});
-if(!rs.length)return{c:'nd',l:'ยังไม่มีผลการดำเนินงาน'};const r=rs.reduce((p,q)=>p+Math.min(q,1),0)/rs.length;return{...sr(r),r}}
+function pst(it){const hm=hmo(),tv=it.ind.map((x,i)=>i).filter(i=>it.ind[i].k=='q'&&it.ind[i].u=='ล้านบาท'),ids=tv.length?tv:it.ind.map((x,i)=>i).filter(i=>it.ind[i].k=='q'),rs=[];let ov=0;
+ids.forEach(i=>{const lr=lastRep(it,i),P=PL(it,i,0,hm),A=lr<0?null:AC(it,i,0,Math.min(hm,lr));if(A==null)return;if(P>0)rs.push(A/P);else if(A>0)ov++});
+if(!rs.length&&!ov)return{c:'nd',l:'ยังไม่มีผลการดำเนินงาน'};const r=(rs.reduce((p,q)=>p+Math.min(q,1),0)+ov)/(rs.length+ov);return{...sr(r),r}}
 function nbox(it){const hm=hmo(),low=new Set();it.ind.forEach((x,i)=>{if(x.k!='q')return;const lr=lastRep(it,i);for(let m=0;m<=Math.min(hm,lr);m++){const P=PL(it,i,0,m),A=AC(it,i,0,m);if(P>0&&A!=null&&A/P<1-1e-9)low.add(m)}});
 if(!low.size)return '';return `<div class="nbx"><b>หมายเหตุ:</b> ${it.note?esc(it.note):'–'}<div class="mu" style="margin-top:4px">เดือนที่ผลต่ำกว่าเป้าหมาย: ${[...low].sort((a,b)=>a-b).map(ml).join(', ')}</div></div>`}
-function qtab(it){const L=qi(it).length?qi(it):ki(it);if(!L.length)return '';const sel=L.includes(S.tab[it.id])?S.tab[it.id]:L[0],x=it.ind[sel],u=esc(x.u),hm=hmo(),tot=x.a,lr=lastRep(it,sel);
+function qtab(it){const L=qi(it);if(!L.length)return '';const sel=L.includes(S.tab[it.id])?S.tab[it.id]:L[0],x=it.ind[sel],u=esc(x.u),hm=hmo(),tot=x.a,lr=lastRep(it,sel);
 const cA=m=>m<=lr?AC(it,sel,0,m):null,P=m=>PL(it,sel,0,m),pH=P(hm),aH=lr<0?null:AC(it,sel,0,Math.min(hm,lr)),st=stat(pH,aH),pct=aH!=null&&tot?aH/tot*100:null,pr=aH!=null&&pH>0?aH/pH*100:null;
 return `<div class="tabs" role="group" aria-label="ตัวชี้วัด">${L.map(i=>`<button type="button" class="tab" data-id="${it.id}" data-i="${i}" aria-pressed="${i==sel}">${esc(tl(it.ind[i]))}</button>`).join('')}</div>
 <div class="it2">${esc(cn(x.n))} <span>(${u})</span></div>
@@ -215,9 +216,9 @@ return `<div class="tabs" role="group" aria-label="ตัวชี้วัด">
 <div class="mu" style="margin-top:6px">ผล <b>${aH==null?'-':f(aH)}</b> / แผน <b>${f(tot)}</b> ${u}</div>
 <div class="tiles">${MO.map((_,m)=>{const a=cA(m),s=stat(P(m),a);return `<div class="tl2 ${s.c}${m>hm?' fut':''}" title="${ml(m)}: แผน ${f2(P(m))} · ผล ${a==null?'-':f2(a)} ${u}"><b>${ml(m)}</b><span class="tp">${f2(P(m))}</span><span class="ta">${a==null?'–':f2(a)}</span></div>`}).join('')}</div>
 <div class="mu" style="margin-top:4px">ตัวเลขบน = แผน · ตัวเลขล่าง = ผล (นับรวมตั้งแต่ ต.ค. 69 ถึงเดือนนั้น)</div>`}
-function qbox(it){const K=ki(it);if(!K.length)return '';return `<div class="qbx"><b>ตัวชี้วัดเชิงคุณภาพ (รายงานผลไตรมาส 4)</b><ul>`+K.map(i=>{const x=it.ind[i],rm=repMonth(x),A=ac1(it,i,rm),s=A==null?null:stat(x.a,A),tg=x.u=='ร้อยละ'?'ร้อยละ '+f(x.a,0):f(x.a,0)+' '+esc(x.u);
+function qbox(it){const sn=new Set(),K=ki(it).filter(i=>{const x=it.ind[i],k=cn(x.n)+'|'+x.a+'|'+x.u;if(sn.has(k))return false;sn.add(k);return true});if(!K.length)return '';return `<div class="qbx"><b>ตัวชี้วัดเชิงคุณภาพ (รายงานผลไตรมาส 4)</b><ul>`+K.map(i=>{const x=it.ind[i],rm=repMonth(x),A=ac1(it,i,rm),s=A==null?null:stat(x.a,A),tg=x.u=='ร้อยละ'?'ร้อยละ '+f(x.a,0):f(x.a,0)+' '+esc(x.u);
 return `<li>${esc(cn(x.n))}ไม่น้อยกว่า${tg} (รายงานสิ้นไตรมาส 4) ${A==null?'':`<span class="rs">ผล ${ml(rm)}: <b class="${s.c}">${f(A)} ${esc(x.u)}${s.r!=null?' ('+f(s.r*100,1)+'%)':''}</b></span>`}</li>`}).join('')+`</ul></div>`}
-const body=it=>`<div class="dh"><div class="dt">${/^\d/.test(it.id)?it.id+'. ':''}${esc(it.n)}</div><div class="ds">${esc(D.plans[it.p].f||D.plans[it.p].n)}</div><div class="dm">${chips(it)}</div></div>`+qtab(it)+nbox(it)+(qi(it).length?qbox(it):'');
+const body=it=>`<div class="dh"><div class="dt">${/^\d/.test(it.id)?it.id+'. ':''}${esc(it.n)}</div><div class="ds">${esc(D.plans[it.p].f||D.plans[it.p].n)}</div><div class="dm">${chips(it)}</div></div>`+qtab(it)+nbox(it)+qbox(it);
 function renderList(){let h='';D.plans.forEach((p,pi)=>{h+=`<div class="gh">${esc(p.f||p.n)} · ${f(p.b,4)} ล้านบาท</div>`;D.items.filter(x=>x.p==pi).forEach(it=>{const s=pst(it);
 h+=`<details id="p-${it.id}" data-id="${it.id}" ${S.open.has(it.id)?'open':''} class="${s.c}"><summary><span class="dot"></span><div class="nm">${/^\d/.test(it.id)?it.id+'. ':''}${esc(it.n)}<div class="chp">${chips(it)}</div></div></summary><div class="body">${S.open.has(it.id)?body(it):''}</div></details>`})});
 $('list').innerHTML=h;
